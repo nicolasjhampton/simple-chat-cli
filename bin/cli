@@ -1,0 +1,20 @@
+#!/usr/bin/env ruby
+
+require "bundler/setup"
+require "chatcli"
+
+
+
+client = Chatcli::Client.new('sonvolt')
+
+uri = client.api(:login)
+puts uri.to_s
+
+text = client.login
+puts text
+text = client.info
+puts text
+text = client.join "doodie"
+puts text
+text = client.send "I did one"
+puts text
