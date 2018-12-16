@@ -4,7 +4,7 @@ module Chatcli
   class Console
     def initialize; end
 
-    attr_accessor :client, :status
+    attr_reader :client, :users, :groups, current_group
 
     def login
       puts 'Enter a username'
@@ -12,12 +12,27 @@ module Chatcli
       @client = Client.new username
       @client.login
       user_info = @client.info
-      @status = JSON.parse(user_info)["results"]
-      group_listing
+      user_info = JSON.parse(user_info)
+      @users = user_info["results"]["users"]
+      @current_group = user_info["results"]["currentGroup"]
+      @groups = user_info["results"]["groups"]
+      user_listing
+    end
+
+    def join
+      puts 'Groups:'
+      @client.join
+    end
+
+    def user_listing
+      puts "Users:"
+      @status["users"].each_with_index do |user, index|
+        puts "#{index + 1}. #{user}"
+      end
     end
 
     def group_listing
-      puts @status
+      puts "Groups:"
       @status["users"].each_with_index do |user, index|
         puts "#{index + 1}. #{user}"
       end
