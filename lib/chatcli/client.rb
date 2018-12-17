@@ -1,7 +1,9 @@
 require 'net/http'
+require 'em-eventsource'
+require 'json'
 
 class Chatcli::Client
-  attr_accessor :username
+  attr_accessor :base_url, :stream_pid, :username, :group, :users, :groups, :members, :messages
 
   ACTIONS = {
     login: 'add:user',
@@ -29,22 +31,60 @@ class Chatcli::Client
 
   def login
     uri = api(:login)
-    Net::HTTP.get(uri)
+    res = req(uri)
+    @username = res['username']
+    @users = res['users']
+    @members = res['members']
+    @group = 'public'
   end
 
   def info
     uri = api(:info)
-    Net::HTTP.get(uri)
+    res = req(uri)
+    @group = res['group']
+    @users = res['users']
+    @groups = res['groups']
   end
 
   def join(group)
     @group = group
     uri = api(:join)
-    Net::HTTP.get(uri)
+    connect()
+    res = req(uri)
+    @messages = res['messages']
+    @group = res['group']
+    @members = res['members']
   end
 
   def send(data)
     uri = api(:send, data)
-    Net::HTTP.get(uri)
+    req(uri)
+  end
+
+  def connect
+    # at_exit do
+    #   puts @stream_pid
+    #   Process.kill('SIGINT', @stream_pid)
+    # end
+    @stream_pid = fork do
+      Signal.trap('SIGINT') { exit }
+      EM.run do
+        source = EventMachine::EventSource.new("#{@base_url}stream/?group=#{@group}") #  # https://nichampton.lib.id/simple-chat@dev/stream/
+        source.message do |message|
+          
+        end
+        source.on @group do |message|
+          json_message = JSON.parse(message)
+          @messages = json_message['messages']
+        end
+        source.start # Start listening
+      end
+    end
+  end
+
+  def req(uri)
+    res = Net::HTTP.get(uri)
+    data = JSON.parse(res)
+    data['results']
   end
 end

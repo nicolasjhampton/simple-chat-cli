@@ -1,13 +1,18 @@
 #!/usr/bin/env ruby
 
-require "bundler/setup"
-require "chatcli"
+require 'bundler/setup'
+require 'chatcli'
 
 console = Chatcli::Console.new
 
 console.login
 
+console.join
+
+console.chat
 # client = Chatcli::Client.new('sonvolt')
+
+# client.connect
 
 # uri = client.api(:login)
 # puts uri.to_s
